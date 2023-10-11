@@ -1,15 +1,7 @@
 package ru.practicum.shareit.user;
 
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository {
-    List<UserDto> getAllUsers();
+public interface UserRepository extends JpaRepository<User, Integer> {
 
-    UserDto getUser(int userId);
-
-    UserDto createUser(User user);
-
-    UserDto updateUser(User user, int userId);
-
-    void deleteUser(int userId);
 }

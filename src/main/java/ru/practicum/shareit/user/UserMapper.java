@@ -13,4 +13,13 @@ public class UserMapper {
                 .email(user.getEmail())
                 .build();
     }
+
+    public User userDtoMap(UserDto userDto) {
+        return User
+                .builder()
+                .id(userDto.getId())
+                .name(userDto.getName())
+                .email(userDto.getEmail())
+                .build();
+    }
 }

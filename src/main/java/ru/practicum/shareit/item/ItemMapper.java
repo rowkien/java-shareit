@@ -12,7 +12,18 @@ public class ItemMapper {
                 .name(item.getName())
                 .description(item.getDescription())
                 .owner(item.getOwner())
-                .isAvailable(item.getAvailable())
+                .available(item.getAvailable())
+                .build();
+    }
+
+    public Item itemDtoMap(ItemDto itemDto) {
+        return Item
+                .builder()
+                .id(itemDto.getId())
+                .name(itemDto.getName())
+                .description(itemDto.getDescription())
+                .owner(itemDto.getOwner())
+                .available(itemDto.getAvailable())
                 .build();
     }
 }
