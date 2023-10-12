@@ -12,7 +12,8 @@ import java.util.List;
 
 
 @Entity
-@Data
+@Getter
+@Setter
 @Builder
 @Table(name = "items", schema = "public")
 @AllArgsConstructor

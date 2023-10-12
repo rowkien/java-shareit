@@ -1,10 +1,7 @@
 package ru.practicum.shareit.item.comment;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.user.User;
 
@@ -12,7 +9,8 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Builder
 @Table(name = "comments", schema = "public")
 @AllArgsConstructor

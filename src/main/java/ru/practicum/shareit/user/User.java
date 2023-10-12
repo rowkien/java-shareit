@@ -1,15 +1,13 @@
 package ru.practicum.shareit.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Builder
 @Table(name = "users", schema = "public")
 @NoArgsConstructor

@@ -28,28 +28,22 @@ public class BookingServiceImpl implements BookingService {
 
     private final ItemService itemService;
 
-    private final BookingMapper bookingMapper;
-
-    private final UserMapper userMapper;
-
-    private final ItemMapper itemMapper;
-
     @Override
     public BookingDto createBooking(int userId, BookingItemIdDto bookingItemIdDto) {
         isValid(bookingItemIdDto);
         UserDto bookerDto = userService.getUser(userId);
-        User booker = userMapper.userDtoMap(bookerDto);
+        User booker = UserMapper.userDtoMap(bookerDto);
         ItemDto itemDto = itemService.getItem(userId, bookingItemIdDto.getItemId());
-        Item item = itemMapper.itemDtoMap(itemDto);
+        Item item = ItemMapper.itemDtoMap(itemDto);
         if (!item.getAvailable()) {
             throw new ValidationException("Нельзя забронировать недоступную вещь!");
         }
         if (booker.getId() == item.getOwner().getId()) {
             throw new NotFoundException("Нельзя забронировать свою вещь!");
         }
-        Booking booking = bookingMapper.bookingItemIdDtoMap(bookingItemIdDto, item, booker);
+        Booking booking = BookingMapper.bookingItemIdDtoMap(bookingItemIdDto, item, booker);
         booking.setStatus(BookingStatus.WAITING);
-        return bookingMapper.bookingMap(bookingRepository.save(booking));
+        return BookingMapper.bookingMap(bookingRepository.save(booking));
     }
 
     @Override
@@ -67,7 +61,7 @@ public class BookingServiceImpl implements BookingService {
         } else {
             booking.setStatus(BookingStatus.REJECTED);
         }
-        return bookingMapper.bookingMap(bookingRepository.save(booking));
+        return BookingMapper.bookingMap(bookingRepository.save(booking));
     }
 
     @Override
@@ -75,7 +69,7 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = checkBooking(bookingId);
         userService.getUser(userId);
         if (booking.getBooker().getId() == userId || booking.getItem().getOwner().getId() == userId) {
-            return bookingMapper.bookingMap(booking);
+            return BookingMapper.bookingMap(booking);
         } else {
             throw new NotFoundException("Пользователь с ID " + userId + " не имеет доступа!");
         }
@@ -117,7 +111,7 @@ public class BookingServiceImpl implements BookingService {
             default:
                 throw new ValidationException("Такого статуса бронирования нет!");
         }
-        all.forEach(booking -> allDto.add(bookingMapper.bookingMap(booking)));
+        all.forEach(booking -> allDto.add(BookingMapper.bookingMap(booking)));
         return allDto.stream().sorted(Comparator.comparing(BookingDto::getEnd).reversed()).collect(Collectors.toList());
     }
 
@@ -157,7 +151,7 @@ public class BookingServiceImpl implements BookingService {
             default:
                 throw new ValidationException("Такого статуса бронирования нет!");
         }
-        all.forEach(booking -> allDto.add(bookingMapper.bookingMap(booking)));
+        all.forEach(booking -> allDto.add(BookingMapper.bookingMap(booking)));
         return allDto.stream().sorted(Comparator.comparing(BookingDto::getEnd).reversed()).collect(Collectors.toList());
     }
 

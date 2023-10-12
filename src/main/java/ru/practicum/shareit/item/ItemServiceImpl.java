@@ -23,17 +23,9 @@ public class ItemServiceImpl implements ItemService {
 
     private final UserService userService;
 
-    private final ItemMapper itemMapper;
-
-    private final UserMapper userMapper;
-
     private final BookingRepository bookingRepository;
 
-    private final CommentMapper commentMapper;
-
     private final CommentRepository commentRepository;
-
-    private final BookingMapper bookingMapper;
 
     @Override
     public List<ItemDto> getAllItems(int userId) {
@@ -51,14 +43,14 @@ public class ItemServiceImpl implements ItemService {
             List<Booking> next = bookingRepository.findNextBookingByOwnerId(item.getId(),
                     userId, BookingStatus.REJECTED,
                     LocalDateTime.now());
-            ItemDto itemDto = itemMapper.itemMap(item);
+            ItemDto itemDto = ItemMapper.itemMap(item);
             if (!last.isEmpty()) {
-                itemDto.setLastBooking(bookingMapper.bookingLastAndNextDtoMap(last.get(0)));
+                itemDto.setLastBooking(BookingMapper.bookingLastAndNextDtoMap(last.get(0)));
             }
             if (!next.isEmpty()) {
-                itemDto.setNextBooking(bookingMapper.bookingLastAndNextDtoMap(next.get(0)));
+                itemDto.setNextBooking(BookingMapper.bookingLastAndNextDtoMap(next.get(0)));
             }
-            itemDto.setComments(commentMapper.commentListMap(commentRepository.findAllByItemId(item.getId())));
+            itemDto.setComments(CommentMapper.commentListMap(commentRepository.findAllByItemId(item.getId())));
             result.add(itemDto);
         }
         return result;
@@ -67,18 +59,18 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getItem(int userId, int itemId) {
         Item item = checkItem(itemId);
-        ItemDto itemDto = itemMapper.itemMap(item);
+        ItemDto itemDto = ItemMapper.itemMap(item);
         List<Booking> last =
                 bookingRepository.findLastBookingByOwnerId(itemId, userId, BookingStatus.REJECTED, LocalDateTime.now());
         List<Booking> next =
                 bookingRepository.findNextBookingByOwnerId(itemId, userId, BookingStatus.REJECTED, LocalDateTime.now());
         if (!last.isEmpty()) {
-            itemDto.setLastBooking(bookingMapper.bookingLastAndNextDtoMap(last.get(0)));
+            itemDto.setLastBooking(BookingMapper.bookingLastAndNextDtoMap(last.get(0)));
         }
         if (!next.isEmpty()) {
-            itemDto.setNextBooking(bookingMapper.bookingLastAndNextDtoMap(next.get(0)));
+            itemDto.setNextBooking(BookingMapper.bookingLastAndNextDtoMap(next.get(0)));
         }
-        itemDto.setComments(commentMapper.commentListMap(commentRepository.findAllByItemId(itemId)));
+        itemDto.setComments(CommentMapper.commentListMap(commentRepository.findAllByItemId(itemId)));
         return itemDto;
     }
 
@@ -86,8 +78,8 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto createItem(int userId, Item item) {
         isValid(item);
         UserDto userDto = userService.getUser(userId);
-        item.setOwner(userMapper.userDtoMap(userDto));
-        return itemMapper.itemMap(itemRepository.save(item));
+        item.setOwner(UserMapper.userDtoMap(userDto));
+        return ItemMapper.itemMap(itemRepository.save(item));
     }
 
     @Override
@@ -106,7 +98,7 @@ public class ItemServiceImpl implements ItemService {
         if (item.getAvailable() != null) {
             updatedItem.setAvailable(item.getAvailable());
         }
-        return itemMapper.itemMap(itemRepository.save(updatedItem));
+        return ItemMapper.itemMap(itemRepository.save(updatedItem));
     }
 
     @Override
@@ -126,7 +118,7 @@ public class ItemServiceImpl implements ItemService {
                         || item.getDescription().toLowerCase().contains(text.toLowerCase())
                         && item.getAvailable())
                 .collect(Collectors.toList());
-        searchedItems.forEach(item -> result.add(itemMapper.itemMap(item)));
+        searchedItems.forEach(item -> result.add(ItemMapper.itemMap(item)));
         return result;
     }
 
@@ -168,9 +160,9 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("Комментарий не может быть пустым!");
         }
         checkBookingByItemAndUserAndStatusAndPast(userId, itemId);
-        User user = userMapper.userDtoMap(userService.getUser(userId));
-        Item item = itemMapper.itemDtoMap(getItem(userId, itemId));
-        Comment comment = commentMapper.commentTextDtoMapping(commentTextDto, item, user);
-        return commentMapper.commentMap(commentRepository.save(comment));
+        User user = UserMapper.userDtoMap(userService.getUser(userId));
+        Item item = ItemMapper.itemDtoMap(getItem(userId, itemId));
+        Comment comment = CommentMapper.commentTextDtoMapping(commentTextDto, item, user);
+        return CommentMapper.commentMap(commentRepository.save(comment));
     }
 }

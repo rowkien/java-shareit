@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item.comment;
 
-import org.springframework.stereotype.Component;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.user.User;
 
@@ -8,9 +7,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
 public class CommentMapper {
-    public CommentDto commentMap(Comment comment) {
+    public static CommentDto commentMap(Comment comment) {
         return CommentDto
                 .builder()
                 .id(comment.getId())
@@ -21,7 +19,7 @@ public class CommentMapper {
                 .build();
     }
 
-    public Comment commentTextDtoMapping(CommentTextDto commentTextDto, Item item, User author) {
+    public static Comment commentTextDtoMapping(CommentTextDto commentTextDto, Item item, User author) {
         return Comment
                 .builder()
                 .text(commentTextDto.getText())
@@ -31,7 +29,7 @@ public class CommentMapper {
                 .build();
     }
 
-    public List<CommentDto> commentListMap(List<Comment> comments) {
+    public static List<CommentDto> commentListMap(List<Comment> comments) {
         List<CommentDto> result = new ArrayList<>();
         comments.forEach(comment -> result.add(commentMap(comment)));
         return result;
