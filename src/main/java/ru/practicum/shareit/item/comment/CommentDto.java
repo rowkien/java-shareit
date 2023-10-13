@@ -1,11 +1,10 @@
-package ru.practicum.shareit.booking;
+package ru.practicum.shareit.item.comment;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.item.Item;
-import ru.practicum.shareit.user.User;
 
 import java.time.LocalDateTime;
 
@@ -13,11 +12,10 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookingDto {
+public class CommentDto {
     private int id;
-    private LocalDateTime start;
-    private LocalDateTime end;
+    private String text;
     private Item item;
-    private User booker;
-    private BookingStatus status;
+    private String authorName;
+    private LocalDateTime created;
 }

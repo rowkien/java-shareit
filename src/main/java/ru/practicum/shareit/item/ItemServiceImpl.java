@@ -2,12 +2,18 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.*;
+import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.exceptions.ValidationException;
+import ru.practicum.shareit.item.comment.*;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserDto;
+import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.UserService;
 
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,38 +23,103 @@ public class ItemServiceImpl implements ItemService {
 
     private final UserService userService;
 
+    private final BookingRepository bookingRepository;
+
+    private final CommentRepository commentRepository;
+
     @Override
     public List<ItemDto> getAllItems(int userId) {
         userService.getUser(userId);
-        return itemRepository.getAllItems(userId);
+        List<Item> userItems = itemRepository.findAll()
+                .stream()
+                .filter(item -> item.getOwner().getId() == userId)
+                .sorted(Comparator.comparing(Item::getId))
+                .collect(Collectors.toList());
+        List<ItemDto> result = new ArrayList<>();
+        for (Item item : userItems) {
+            List<Booking> last = bookingRepository.findLastBookingByOwnerId(item.getId(),
+                    userId, BookingStatus.REJECTED,
+                    LocalDateTime.now());
+            List<Booking> next = bookingRepository.findNextBookingByOwnerId(item.getId(),
+                    userId, BookingStatus.REJECTED,
+                    LocalDateTime.now());
+            ItemDto itemDto = ItemMapper.itemMap(item);
+            if (!last.isEmpty()) {
+                itemDto.setLastBooking(BookingMapper.bookingLastAndNextDtoMap(last.get(0)));
+            }
+            if (!next.isEmpty()) {
+                itemDto.setNextBooking(BookingMapper.bookingLastAndNextDtoMap(next.get(0)));
+            }
+            itemDto.setComments(CommentMapper.commentListMap(commentRepository.findAllByItemId(item.getId())));
+            result.add(itemDto);
+        }
+        return result;
     }
 
     @Override
-    public ItemDto getItem(int itemId) {
-        return itemRepository.getItem(itemId);
+    public ItemDto getItem(int userId, int itemId) {
+        Item item = checkItem(itemId);
+        ItemDto itemDto = ItemMapper.itemMap(item);
+        List<Booking> last =
+                bookingRepository.findLastBookingByOwnerId(itemId, userId, BookingStatus.REJECTED, LocalDateTime.now());
+        List<Booking> next =
+                bookingRepository.findNextBookingByOwnerId(itemId, userId, BookingStatus.REJECTED, LocalDateTime.now());
+        if (!last.isEmpty()) {
+            itemDto.setLastBooking(BookingMapper.bookingLastAndNextDtoMap(last.get(0)));
+        }
+        if (!next.isEmpty()) {
+            itemDto.setNextBooking(BookingMapper.bookingLastAndNextDtoMap(next.get(0)));
+        }
+        itemDto.setComments(CommentMapper.commentListMap(commentRepository.findAllByItemId(itemId)));
+        return itemDto;
     }
 
     @Override
     public ItemDto createItem(int userId, Item item) {
-        item.setOwner(addOwner(userId));
         isValid(item);
-        return itemRepository.createItem(userId, item);
+        UserDto userDto = userService.getUser(userId);
+        item.setOwner(UserMapper.userDtoMap(userDto));
+        return ItemMapper.itemMap(itemRepository.save(item));
     }
 
     @Override
     public ItemDto updateItem(int userId, int itemId, Item item) {
         userService.getUser(userId);
-        return itemRepository.updateItem(userId, itemId, item);
+        Item updatedItem = checkItem(itemId);
+        if (updatedItem.getOwner().getId() != userId) {
+            throw new NotFoundException("Редактировать вещь может только владелец!");
+        }
+        if (item.getName() != null) {
+            updatedItem.setName(item.getName());
+        }
+        if (item.getDescription() != null) {
+            updatedItem.setDescription(item.getDescription());
+        }
+        if (item.getAvailable() != null) {
+            updatedItem.setAvailable(item.getAvailable());
+        }
+        return ItemMapper.itemMap(itemRepository.save(updatedItem));
     }
 
     @Override
     public void deleteItem(int itemId) {
-        itemRepository.deleteItem(itemId);
+        itemRepository.deleteById(itemId);
     }
 
     @Override
-    public List<ItemDto> searchItems(int userId, String text) {
-        return itemRepository.searchItems(userId, text);
+    public List<ItemDto> searchItems(String text) {
+        List<ItemDto> result = new ArrayList<>();
+        if (text.isEmpty()) {
+            return result;
+        }
+        List<Item> searchedItems = itemRepository.findAll()
+                .stream()
+                .filter(item -> item.getName().toLowerCase().contains(text.toLowerCase())
+                        || item.getDescription().toLowerCase().contains(text.toLowerCase())
+                        && item.getAvailable())
+                .collect(Collectors.toList());
+        searchedItems.forEach(item -> result.add(ItemMapper.itemMap(item)));
+        return result;
     }
 
     private void isValid(Item item) {
@@ -63,13 +134,35 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private User addOwner(int userId) {
-        UserDto ownerDto = userService.getUser(userId);
-        return User.builder()
-                .id(ownerDto.getId())
-                .name(ownerDto.getName())
-                .email(ownerDto.getEmail())
-                .build();
+    private Item checkItem(int itemId) {
+        Item item;
+        Optional<Item> checkedItem = itemRepository.findById(itemId);
+        if (checkedItem.isPresent()) {
+            item = checkedItem.get();
+
+        } else {
+            throw new NotFoundException("Предмета с id " + itemId + " нет в базе!");
+        }
+        return item;
     }
 
+    private void checkBookingByItemAndUserAndStatusAndPast(int userId, int itemId) {
+        if (!bookingRepository.existsBookingByBookerIdAndItemIdAndStatusAndStartBefore(userId,
+                itemId,
+                BookingStatus.APPROVED,
+                LocalDateTime.now())) {
+            throw new ValidationException("Броней на вещь " + itemId + " нет в базе!");
+        }
+    }
+
+    public CommentDto addComment(int userId, int itemId, CommentTextDto commentTextDto) {
+        if (commentTextDto.getText() == null || commentTextDto.getText().isBlank()) {
+            throw new ValidationException("Комментарий не может быть пустым!");
+        }
+        checkBookingByItemAndUserAndStatusAndPast(userId, itemId);
+        User user = UserMapper.userDtoMap(userService.getUser(userId));
+        Item item = ItemMapper.itemDtoMap(getItem(userId, itemId));
+        Comment comment = CommentMapper.commentTextDtoMapping(commentTextDto, item, user);
+        return CommentMapper.commentMap(commentRepository.save(comment));
+    }
 }
