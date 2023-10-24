@@ -870,5 +870,4 @@ class BookingServiceImplTest {
                 () -> bookingService.createBooking(1, bookingItemIdDto));
         Assertions.assertEquals("Нельзя забронировать недоступную вещь!", exception.getMessage());
     }
-
 }
