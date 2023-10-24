@@ -724,8 +724,8 @@ class BookingServiceImplTest {
         User owner = User
                 .builder()
                 .build();
-        Item item = Item.
-                builder()
+        Item item = Item
+                .builder()
                 .owner(owner)
                 .build();
         Booking booking = Booking
