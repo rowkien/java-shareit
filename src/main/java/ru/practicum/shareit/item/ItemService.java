@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ItemService {
 
-    List<ItemDto> getAllItems(int userId);
+    List<ItemDto> getAllItems(int userId, int from, int size);
 
     ItemDto getItem(int userId, int itemId);
 
@@ -17,7 +17,7 @@ public interface ItemService {
 
     void deleteItem(int itemId);
 
-    List<ItemDto> searchItems(String text);
+    List<ItemDto> searchItems(String text, int from, int size);
 
     CommentDto addComment(int userId, int itemId, CommentTextDto comment);
 }

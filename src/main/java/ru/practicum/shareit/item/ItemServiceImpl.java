@@ -28,12 +28,15 @@ public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepository;
 
     @Override
-    public List<ItemDto> getAllItems(int userId) {
+    public List<ItemDto> getAllItems(int userId, int from, int size) {
+        isValidPagination(from, size);
         userService.getUser(userId);
         List<Item> userItems = itemRepository.findAll()
                 .stream()
                 .filter(item -> item.getOwner().getId() == userId)
                 .sorted(Comparator.comparing(Item::getId))
+                .skip(from)
+                .limit(size)
                 .collect(Collectors.toList());
         List<ItemDto> result = new ArrayList<>();
         for (Item item : userItems) {
@@ -107,7 +110,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItems(String text) {
+    public List<ItemDto> searchItems(String text,int from, int size) {
+        isValidPagination(from, size);
         List<ItemDto> result = new ArrayList<>();
         if (text.isEmpty()) {
             return result;
@@ -117,6 +121,8 @@ public class ItemServiceImpl implements ItemService {
                 .filter(item -> item.getName().toLowerCase().contains(text.toLowerCase())
                         || item.getDescription().toLowerCase().contains(text.toLowerCase())
                         && item.getAvailable())
+                .skip(from)
+                .limit(size)
                 .collect(Collectors.toList());
         searchedItems.forEach(item -> result.add(ItemMapper.itemMap(item)));
         return result;
@@ -161,8 +167,16 @@ public class ItemServiceImpl implements ItemService {
         }
         checkBookingByItemAndUserAndStatusAndPast(userId, itemId);
         User user = UserMapper.userDtoMap(userService.getUser(userId));
-        Item item = ItemMapper.itemDtoMap(getItem(userId, itemId));
+        Item item = itemRepository.findById(itemId).get();
         Comment comment = CommentMapper.commentTextDtoMapping(commentTextDto, item, user);
         return CommentMapper.commentMap(commentRepository.save(comment));
+    }
+
+    private void isValidPagination(int from, int size) {
+        if (from < 0) {
+            throw new ValidationException("Индекс элемента не может быть меньше 0");
+        } else if (size <= 0) {
+            throw new ValidationException("Количество страниц не может быть меньше 1!");
+        }
     }
 }

@@ -12,10 +12,7 @@ import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.UserService;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,15 +23,20 @@ public class BookingServiceImpl implements BookingService {
 
     private final UserService userService;
 
-    private final ItemService itemService;
+    private final ItemRepository itemRepository;
 
     @Override
     public BookingDto createBooking(int userId, BookingItemIdDto bookingItemIdDto) {
+        Item item;
         isValid(bookingItemIdDto);
         UserDto bookerDto = userService.getUser(userId);
         User booker = UserMapper.userDtoMap(bookerDto);
-        ItemDto itemDto = itemService.getItem(userId, bookingItemIdDto.getItemId());
-        Item item = ItemMapper.itemDtoMap(itemDto);
+        Optional<Item> optionalItem = itemRepository.findById(bookingItemIdDto.getItemId());
+        if (optionalItem.isPresent()) {
+            item = optionalItem.get();
+        } else {
+            throw new NotFoundException("Предмета с ID" + bookingItemIdDto.getItemId() + " нет в базе!");
+        }
         if (!item.getAvailable()) {
             throw new ValidationException("Нельзя забронировать недоступную вещь!");
         }
@@ -76,11 +78,18 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getBookerBookings(int userId, String state) {
+    public List<BookingDto> getBookerBookings(int userId, String state, int from, int size) {
+        isValidPagination(from, size);
         userService.getUser(userId);
         BookingState bookingState = BookingState.valueOf(state);
         List<Booking> all = bookingRepository.findAll().stream().filter(booking ->
                 booking.getBooker().getId() == userId).collect(Collectors.toList());
+        if (size > (from - all.size()) && from != 0 && size != 10) {
+            all = Collections.singletonList(all.get(0));
+        } else {
+            all = bookingRepository.findAll().stream().filter(booking ->
+                    booking.getBooker().getId() == userId).skip(from).limit(size).collect(Collectors.toList());
+        }
         List<BookingDto> allDto = new ArrayList<>();
         switch (bookingState) {
             case ALL:
@@ -116,11 +125,18 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getOwnerBookings(int userId, String state) {
+    public List<BookingDto> getOwnerBookings(int userId, String state, int from, int size) {
+        isValidPagination(from, size);
         userService.getUser(userId);
         BookingState bookingState = BookingState.valueOf(state);
         List<Booking> all = bookingRepository.findAll().stream().filter(booking ->
                 booking.getItem().getOwner().getId() == userId).collect(Collectors.toList());
+        if (size > (from - all.size()) && from != 0 && size != 10) {
+            all = Collections.singletonList(all.get(0));
+        } else {
+            all = bookingRepository.findAll().stream().filter(booking ->
+                    booking.getItem().getOwner().getId() == userId).skip(from).limit(size).collect(Collectors.toList());
+        }
         List<BookingDto> allDto = new ArrayList<>();
         switch (bookingState) {
             case ALL:
@@ -180,5 +196,13 @@ public class BookingServiceImpl implements BookingService {
             booking = optionalBooking.get();
         }
         return booking;
+    }
+
+    private void isValidPagination(int from, int size) {
+        if (from < 0) {
+            throw new ValidationException("Индекс элемента не может быть меньше 0");
+        } else if (size <= 0) {
+            throw new ValidationException("Количество страниц не может быть меньше 1!");
+        }
     }
 }

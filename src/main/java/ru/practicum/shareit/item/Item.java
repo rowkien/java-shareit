@@ -19,6 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(value = {"handler", "hibernateLazyInitializer", "FieldHandler"})
+@EqualsAndHashCode
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,4 +35,6 @@ public class Item {
     private Booking nextBooking;
     @Transient
     private Booking lastBooking;
+    @Column(name = "request_id")
+    private Integer requestId;
 }

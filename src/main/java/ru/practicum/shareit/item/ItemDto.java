@@ -4,6 +4,7 @@ import lombok.*;
 import ru.practicum.shareit.booking.BookingLastAndNextDto;
 import ru.practicum.shareit.item.comment.CommentDto;
 import ru.practicum.shareit.user.User;
+
 import java.util.List;
 
 
@@ -18,5 +19,6 @@ public class ItemDto {
     private List<CommentDto> comments;
     private BookingLastAndNextDto nextBooking;
     private BookingLastAndNextDto lastBooking;
+    private Integer requestId;
 
 }
