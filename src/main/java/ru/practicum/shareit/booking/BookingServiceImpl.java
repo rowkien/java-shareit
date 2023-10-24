@@ -117,8 +117,6 @@ public class BookingServiceImpl implements BookingService {
                 break;
             case UNSUPPORTED_STATUS:
                 throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
-            default:
-                throw new ValidationException("Такого статуса бронирования нет!");
         }
         all.forEach(booking -> allDto.add(BookingMapper.bookingMap(booking)));
         return allDto.stream().sorted(Comparator.comparing(BookingDto::getEnd).reversed()).collect(Collectors.toList());
@@ -164,8 +162,6 @@ public class BookingServiceImpl implements BookingService {
                 break;
             case UNSUPPORTED_STATUS:
                 throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
-            default:
-                throw new ValidationException("Такого статуса бронирования нет!");
         }
         all.forEach(booking -> allDto.add(BookingMapper.bookingMap(booking)));
         return allDto.stream().sorted(Comparator.comparing(BookingDto::getEnd).reversed()).collect(Collectors.toList());

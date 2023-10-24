@@ -141,5 +141,16 @@ class ItemRequestServiceImplTest {
         Assertions.assertEquals("Количество страниц не может быть меньше 1!", exception.getMessage());
     }
 
+    @Test
+
+   public void shouldThrowValidationExceptionWith() {
+        ItemRequestDescriptionDto itemRequestDescriptionDto = ItemRequestDescriptionDto
+                .builder()
+                .build();
+        final ValidationException exception = Assertions.assertThrows(
+                ValidationException.class,
+                () -> itemRequestService.createItemRequest(1,itemRequestDescriptionDto));
+        Assertions.assertEquals("Комментарий не может быть пустым!", exception.getMessage());
+    }
 
 }
