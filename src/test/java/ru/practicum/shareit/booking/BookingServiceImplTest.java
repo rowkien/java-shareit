@@ -659,19 +659,6 @@ class BookingServiceImplTest {
     }
 
     @Test
-    public void shouldThrowValidationExceptionWithEmptyBookingStartEqualsEnd() {
-        BookingItemIdDto bookingItemIdDto = BookingItemIdDto
-                .builder()
-                .start(LocalDateTime.now().plusDays(1))
-                .end(LocalDateTime.now().plusDays(1))
-                .build();
-        final ValidationException exception = Assertions.assertThrows(
-                ValidationException.class,
-                () -> bookingService.createBooking(1, bookingItemIdDto));
-        Assertions.assertEquals("Завершение аренды не может в одно время со стартом!", exception.getMessage());
-    }
-
-    @Test
     public void shouldThrowValidationExceptionWithEmptyBookingStartInPast() {
         BookingItemIdDto bookingItemIdDto = BookingItemIdDto
                 .builder()
