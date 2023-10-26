@@ -15,7 +15,8 @@ import java.time.LocalDateTime;
 @Table(name = "comments", schema = "public")
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonIgnoreProperties(value = {"handler","hibernateLazyInitializer","FieldHandler"})
+@JsonIgnoreProperties(value = {"handler", "hibernateLazyInitializer", "FieldHandler"})
+@EqualsAndHashCode
 public class Comment {
 
     @Id
