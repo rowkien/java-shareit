@@ -7,6 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.exceptions.UnsupportedStatusException;
 import ru.practicum.shareit.exceptions.ValidationException;
@@ -219,7 +221,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAllByBookerIdOrderByStartDesc(anyInt(), any(PageRequest.class))).thenReturn(List.of(booking));
         Assertions.assertEquals(1, bookingService.getBookerBookings(2, "ALL", 0, 10).get(0).getId());
     }
 
@@ -254,7 +256,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(booking)));
         Assertions.assertEquals(1, bookingService.getBookerBookings(2, "FUTURE", 0, 10).get(0).getId());
     }
 
@@ -289,7 +291,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(booking)));
         Assertions.assertEquals(1, bookingService.getBookerBookings(2, "WAITING", 0, 10).get(0).getId());
     }
 
@@ -324,7 +326,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.REJECTED)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(booking)));
         Assertions.assertEquals(1, bookingService.getBookerBookings(2, "REJECTED", 0, 10).get(0).getId());
     }
 
@@ -359,7 +361,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.REJECTED)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(booking)));
         Assertions.assertEquals(1, bookingService.getBookerBookings(2, "PAST", 0, 10).get(0).getId());
     }
 
@@ -394,7 +396,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.REJECTED)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(booking)));
         Assertions.assertEquals(1, bookingService.getBookerBookings(2, "CURRENT", 0, 10).get(0).getId());
     }
 
@@ -429,7 +431,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAllByItem_OwnerIdOrderByStartDesc(anyInt(), any(PageRequest.class))).thenReturn(List.of(booking));
         Assertions.assertEquals(1, bookingService.getOwnerBookings(2, "ALL", 0, 10).get(0).getId());
     }
 
@@ -464,7 +466,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(booking)));
         Assertions.assertEquals(1, bookingService.getOwnerBookings(2, "FUTURE", 0, 10).get(0).getId());
     }
 
@@ -499,7 +501,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.WAITING)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(booking)));
         Assertions.assertEquals(1, bookingService.getOwnerBookings(2, "WAITING", 0, 10).get(0).getId());
     }
 
@@ -534,7 +536,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.REJECTED)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(booking)));
         Assertions.assertEquals(1, bookingService.getOwnerBookings(2, "REJECTED", 0, 10).get(0).getId());
     }
 
@@ -569,7 +571,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.REJECTED)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(booking)));
         Assertions.assertEquals(1, bookingService.getOwnerBookings(2, "PAST", 0, 10).get(0).getId());
     }
 
@@ -604,7 +606,7 @@ class BookingServiceImplTest {
                 .status(BookingStatus.REJECTED)
                 .build();
         when(userService.getUser(anyInt())).thenReturn(booker);
-        when(bookingRepository.findAll()).thenReturn(List.of(booking));
+        when(bookingRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(booking)));
         Assertions.assertEquals(1, bookingService.getOwnerBookings(2, "CURRENT", 0, 10).get(0).getId());
     }
 

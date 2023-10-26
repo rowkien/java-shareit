@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.NotFoundException;
 import ru.practicum.shareit.exceptions.UnsupportedStatusException;
@@ -81,90 +82,119 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> getBookerBookings(int userId, String state, int from, int size) {
         isValidPagination(from, size);
         userService.getUser(userId);
+        PageRequest pageRequest = PageRequest.of(from / size, size);
         BookingState bookingState = BookingState.valueOf(state);
-        List<Booking> all = bookingRepository.findAll().stream().filter(booking ->
-                booking.getBooker().getId() == userId).collect(Collectors.toList());
-        if (size > (from - all.size()) && from != 0 && size != 10) {
-            all = Collections.singletonList(all.get(0));
-        } else {
-            all = bookingRepository.findAll().stream().filter(booking ->
-                    booking.getBooker().getId() == userId).skip(from).limit(size).collect(Collectors.toList());
-        }
-        List<BookingDto> allDto = new ArrayList<>();
+        List<Booking> bookings = new ArrayList<>();
+        List<BookingDto> bookingsDto = new ArrayList<>();
         switch (bookingState) {
             case ALL:
+                bookings = bookingRepository.findAllByBookerIdOrderByStartDesc(userId, pageRequest);
                 break;
             case PAST:
-                all = all.stream().filter(booking ->
-                        booking.getEnd().isBefore(LocalDateTime.now())).collect(Collectors.toList());
+                bookings = bookingRepository
+                        .findAll(pageRequest).getContent()
+                        .stream()
+                        .sorted(Comparator.comparing(Booking::getEnd).reversed())
+                        .filter(booking -> booking.getBooker().getId() == userId)
+                        .filter(booking -> booking.getEnd().isBefore(LocalDateTime.now()))
+                        .collect(Collectors.toList());
                 break;
             case FUTURE:
-                all = all.stream().filter(booking ->
-                        booking.getStart().isAfter(LocalDateTime.now())).collect(Collectors.toList());
+                bookings = bookingRepository
+                        .findAll(pageRequest).getContent()
+                        .stream()
+                        .sorted(Comparator.comparing(Booking::getEnd).reversed())
+                        .filter(booking -> booking.getBooker().getId() == userId)
+                        .filter(booking -> booking.getStart().isAfter(LocalDateTime.now())).collect(Collectors.toList());
                 break;
             case CURRENT:
-                all = all.stream().filter(booking ->
-                        booking.getStart().isBefore(LocalDateTime.now())
-                                && booking.getEnd().isAfter(LocalDateTime.now())).collect(Collectors.toList());
+                bookings = bookingRepository
+                        .findAll(pageRequest).getContent()
+                        .stream()
+                        .sorted(Comparator.comparing(Booking::getEnd).reversed())
+                        .filter(booking -> booking.getBooker().getId() == userId)
+                        .filter(booking -> booking.getStart().isBefore(LocalDateTime.now()) && booking.getEnd().isAfter(LocalDateTime.now())).collect(Collectors.toList());
                 break;
             case WAITING:
-                all = all.stream().filter(booking ->
-                        booking.getStatus() == BookingStatus.WAITING).collect(Collectors.toList());
+                bookings = bookingRepository
+                        .findAll(pageRequest).getContent()
+                        .stream()
+                        .sorted(Comparator.comparing(Booking::getEnd).reversed())
+                        .filter(booking -> booking.getBooker().getId() == userId)
+                        .filter(booking -> booking.getStatus() == BookingStatus.WAITING).collect(Collectors.toList());
                 break;
             case REJECTED:
-                all = all.stream().filter(booking ->
-                        booking.getStatus() == BookingStatus.REJECTED).collect(Collectors.toList());
+                bookings = bookingRepository
+                        .findAll(pageRequest).getContent()
+                        .stream()
+                        .sorted(Comparator.comparing(Booking::getEnd).reversed())
+                        .filter(booking -> booking.getBooker().getId() == userId)
+                        .filter(booking -> booking.getStatus() == BookingStatus.REJECTED).collect(Collectors.toList());
                 break;
             case UNSUPPORTED_STATUS:
                 throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
         }
-        all.forEach(booking -> allDto.add(BookingMapper.bookingMap(booking)));
-        return allDto.stream().sorted(Comparator.comparing(BookingDto::getEnd).reversed()).collect(Collectors.toList());
+        bookings.forEach(booking -> bookingsDto.add(BookingMapper.bookingMap(booking)));
+        return bookingsDto;
     }
 
     @Override
     public List<BookingDto> getOwnerBookings(int userId, String state, int from, int size) {
         isValidPagination(from, size);
+        PageRequest pageRequest = PageRequest.of(from / size, size);
         userService.getUser(userId);
         BookingState bookingState = BookingState.valueOf(state);
-        List<Booking> all = bookingRepository.findAll().stream().filter(booking ->
-                booking.getItem().getOwner().getId() == userId).collect(Collectors.toList());
-        if (size > (from - all.size()) && from != 0 && size != 10) {
-            all = Collections.singletonList(all.get(0));
-        } else {
-            all = bookingRepository.findAll().stream().filter(booking ->
-                    booking.getItem().getOwner().getId() == userId).skip(from).limit(size).collect(Collectors.toList());
-        }
-        List<BookingDto> allDto = new ArrayList<>();
+        List<Booking> bookings = new ArrayList<>();
+        List<BookingDto> bookingsDto = new ArrayList<>();
         switch (bookingState) {
             case ALL:
+                bookings = bookingRepository.findAllByItem_OwnerIdOrderByStartDesc(userId, pageRequest);
                 break;
             case PAST:
-                all = all.stream().filter(booking ->
-                        booking.getEnd().isBefore(LocalDateTime.now())).collect(Collectors.toList());
+                bookings = bookingRepository
+                        .findAll(pageRequest).getContent()
+                        .stream()
+                        .sorted(Comparator.comparing(Booking::getEnd).reversed())
+                        .filter(booking -> booking.getItem().getOwner().getId() == userId)
+                        .filter(booking -> booking.getEnd().isBefore(LocalDateTime.now())).collect(Collectors.toList());
                 break;
             case FUTURE:
-                all = all.stream().filter(booking ->
-                        booking.getStart().isAfter(LocalDateTime.now())).collect(Collectors.toList());
+                bookings = bookingRepository
+                        .findAll(pageRequest).getContent()
+                        .stream()
+                        .sorted(Comparator.comparing(Booking::getEnd).reversed())
+                        .filter(booking -> booking.getItem().getOwner().getId() == userId)
+                        .filter(booking -> booking.getStart().isAfter(LocalDateTime.now())).collect(Collectors.toList());
                 break;
             case CURRENT:
-                all = all.stream().filter(booking ->
-                        booking.getStart().isBefore(LocalDateTime.now()) &&
-                                booking.getEnd().isAfter(LocalDateTime.now())).collect(Collectors.toList());
+                bookings = bookingRepository
+                        .findAll(pageRequest).getContent()
+                        .stream()
+                        .sorted(Comparator.comparing(Booking::getEnd).reversed())
+                        .filter(booking -> booking.getItem().getOwner().getId() == userId)
+                        .filter(booking -> booking.getStart().isBefore(LocalDateTime.now()) && booking.getEnd().isAfter(LocalDateTime.now())).collect(Collectors.toList());
                 break;
             case WAITING:
-                all = all.stream().filter(booking ->
-                        booking.getStatus() == BookingStatus.WAITING).collect(Collectors.toList());
+                bookings = bookingRepository
+                        .findAll(pageRequest).getContent()
+                        .stream()
+                        .sorted(Comparator.comparing(Booking::getEnd).reversed())
+                        .filter(booking -> booking.getItem().getOwner().getId() == userId)
+                        .filter(booking -> booking.getStatus() == BookingStatus.WAITING).collect(Collectors.toList());
                 break;
             case REJECTED:
-                all = all.stream().filter(booking ->
-                        booking.getStatus() == BookingStatus.REJECTED).collect(Collectors.toList());
+                bookings = bookingRepository
+                        .findAll(pageRequest).getContent()
+                        .stream()
+                        .sorted(Comparator.comparing(Booking::getEnd).reversed())
+                        .filter(booking -> booking.getItem().getOwner().getId() == userId)
+                        .filter(booking -> booking.getStatus() == BookingStatus.REJECTED).collect(Collectors.toList());
                 break;
             case UNSUPPORTED_STATUS:
                 throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
         }
-        all.forEach(booking -> allDto.add(BookingMapper.bookingMap(booking)));
-        return allDto.stream().sorted(Comparator.comparing(BookingDto::getEnd).reversed()).collect(Collectors.toList());
+        bookings.forEach(booking -> bookingsDto.add(BookingMapper.bookingMap(booking)));
+        return bookingsDto;
     }
 
     private void isValid(BookingItemIdDto bookingItemIdDto) {
